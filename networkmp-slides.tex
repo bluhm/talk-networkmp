@@ -63,7 +63,7 @@
 \item malloc, pools
 \item tasks
 \item multicast
-\item pseudo devices
+\item pseudo devices:
     aggr bpe bridge carp egre enc eoip etherip gif gre lo mgre mpe
     mpip mpw nvgre pair pflog pflow pfsync ppp pppoe svlan tap tpmr
     trunk tun veb vether vlan vport vxlan wg
@@ -105,16 +105,16 @@
 \begin{frame}{Single Processor}
 \begin{tikzpicture}
     \path (0, 2) node [draw] (user) {User Land};
-    \path (0, 0) node [draw] (up) {Kernel Upper Half};
-    \draw [->] (user) -- (up) node[midway,right] {System Call};
-    \path (0, -2) node [draw] (lo) {Kernel Lower Half};
-    \draw [<-] (up) -- (lo) node[midway,right] {Interrupt};
-    \path (up.south) node (ups) {} (lo.north) node (lon) {};
-    \draw [->,red] (ups.west) -- (lon.west) node[midway,left,red] {SPL};
+    \path (0, 0) node [draw] (to) {Kernel Top Half};
+    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \path (0, -2) node [draw] (bo) {Kernel Bottom Half};
+    \draw [<-] (to.south) -- (bo.north) node[midway,right] {Interrupt};
+    \path (to.south) node (tos) {} (bo.north) node (bon) {};
+    \draw [->,red] (tos.west) -- (bon.west) node[midway,left,red] {SPL};
     \path (0, -4) node [draw] (hw) {Hardware};
-    \draw [<-] (lo) -- (hw) node[midway,right] {Handler};
-    \path (lo.south) node (los) {} (hw.north) node (hwn) {};
-    \draw [->,red,dashed] (los.west) -- (hwn.west) node[midway,left,red] {SPL};
+    \draw [<-] (bo) -- (hw) node[midway,right] {Handler};
+    \path (bo.south) node (bos) {} (hw.north) node (hwn) {};
+    \draw [->,red,dashed] (bos.west) -- (hwn.west) node[midway,left,red] {SPL};
 \end{tikzpicture}
 \end{frame}
 
@@ -122,24 +122,98 @@
 \begin{frame}{Multi Processor Kernel Lock}
 \begin{tikzpicture}
     \path (0, 2) node [draw] (user) {User Land};
-    \path (0, 0) node [draw] (up) {Kernel Upper Half};
-    \draw [->] (user) -- (up) node[midway,right] {System Call};
-    \path (0, -2) node [draw] (lo) {Kernel Lower Half};
-    \draw [<-] (up) -- (lo) node[midway,right] {Interrupt};
-    \path (up.south) node (ups) {} (lo.north) node (lon) {};
-    \draw [->,red] (ups.west) -- (lon.west) node[midway,left,red] {SPL};
+    \path (0, 0) node [draw] (to) {Kernel Top Half};
+    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \path (0, -2) node [draw] (bo) {Kernel Bottom Half};
+    \draw [<-] (to.south) -- (bo.north) node[midway,right] {Interrupt};
+    \path (to.south) node (tos) {} (bo.north) node (bon) {};
+    \draw [->,red] (tos.west) -- (bon.west) node[midway,left,red] {SPL};
     \path (0, -4) node [draw] (hw) {Hardware};
-    \draw [<-] (lo) -- (hw) node[midway,right] {Handler};
-    \path (lo.south) node (los) {} (hw.north) node (hwn) {};
-    \draw [->,red,dashed] (los.west) -- (hwn.west) node[midway,left,red] {SPL};
+    \draw [<-] (bo) -- (hw) node[midway,right] {Handler};
+    \path (bo.south) node (bos) {} (hw.north) node (hwn) {};
+    \draw [->,red,dashed] (bos.west) -- (hwn.west) node[midway,left,red] {SPL};
 
     \path (8, 2) node [draw] (user1) {User Land};
-    \path (8, 0) node [draw] (up1) {Kernel Upper Half};
-    \draw [->] (user1) -- (up1) node[midway,right] {System Call};
+    \path (8, 0) node [draw] (to1) {Kernel Top Half};
+    \draw [->] (user1) -- (to1) node[midway,right] {System Call};
 
-    \draw [<->,red] (up) -- (up1) node[midway,above] {Kernel Lock};
-    \draw [<->,red] (lo.east) -- (up1.south west) node[midway, below right]
-	{Kernel Lock};
+    \draw [<->,red] (to) -- (to1) node[midway,above] {Kernel Lock};
+    \draw [<->,red] (bo.north east) -- (to1.south west)
+	node[midway, below right] {Kernel Lock};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Multi Processor Fine Grained Mutex}
+\begin{frame}{Multi Processor Fine Grained Mutex}
+\begin{tikzpicture}
+    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 0) node [draw] (to) {Kernel Top Half};
+    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \path (0, -2) node [draw] (bo) {Kernel Bottom Half};
+    \draw [<-] (to.south) -- (bo.north) node[midway,right] {Interrupt};
+    \path (to.south) node (tos) {} (bo.north) node (bon) {};
+    \draw [<->,red] (tos.west) -- (bon.west) node[midway,left,red] {Mutex};
+    \path (0, -4) node [draw] (hw) {Hardware};
+    \draw [<-] (bo) -- (hw) node[midway,right] {Handler};
+
+    \path (8, 2) node [draw] (user1) {User Land};
+    \path (8, 0) node [draw] (to1) {Kernel Top Half};
+    \draw [->] (user1) -- (to1) node[midway,right] {System Call};
+
+    \draw [<->,red] (to) -- (to1) node[midway,above] {Mutex};
+    \draw [<->,red] (bo.north east) -- (to1.south west)
+	node[midway, below right] {Mutex};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Multi Processor Multi Queue}
+\begin{frame}{Multi Processor Multi Queue}
+\begin{tikzpicture}
+    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 0) node [draw] (to) {Kernel Top Half};
+    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \path (0, -2) node [draw] (bo) {Kernel Bottom Half};
+    \draw [<-] (to.south) -- (bo.north) node[midway,right] {Interrupt};
+    \path (to.south) node (tos) {} (bo.north) node (bon) {};
+    \draw [<->,red] (tos.west) -- (bon.west) node[midway,left,red] {Mutex};
+    \path (4, -4) node [draw] (hw) {Hardware};
+    \draw [<-] (bo) -- (hw.north west) node[midway,below left] {Handler};
+
+    \path (8, 2) node [draw] (user1) {User Land};
+    \path (8, 0) node [draw] (to1) {Kernel Top Half};
+    \draw [->] (user1) -- (to1) node[midway,right] {System Call};
+    \path (8, -2) node [draw] (bo1) {Kernel Bottom Half};
+    \draw [<-] (to1.south) -- (bo1.north) node[midway,left] {Interrupt};
+    \path (to1.south) node (tos1) {} (bo1.north) node (bon1) {};
+    \draw [<->,red] (tos1.east) -- (bon1.east) node[midway,right,red] {Mutex};
+    \draw [<-] (bo1) -- (hw.north east) node[midway,below right] {Handler};
+
+    \draw [<->,red] (to) -- (to1) node[midway,above] {Mutex};
+    \draw [<->,red] (bo.north east) -- (to1.south west)
+	node[midway,below right] {};
+    \draw [<->,red] (to.south east) -- (bo1.north west)
+	node[midway,below right] {};
+    \draw [<->,red] (bo) -- (bo1) node[midway,below] {Mutex};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Kernel Threads}
+\begin{frame}{Kernel Threads}
+\begin{tikzpicture}
+    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 0) node [draw] (to) {Kernel Top Half};
+    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \path (4, -2) node [draw] (bo) {Kernel Bottom Half};
+    \draw [<-] (to.south) -- (bo.north west) node[midway,below left] {Wakeup};
+
+    \path (8, 0) node [draw] (kt) {Kernel Thread};
+    \draw [->] (kt.north east) .. controls (12,2) and (4,2) ..  (kt.north west)
+	node[midway,above] {Sleep};
+    \draw [<-] (kt.south) -- (bo.north east) node[midway,below right] {Wakeup};
+    \path (to.east) node (toe) {} (kt.west) node (ktw) {};
+    \draw [<->,red] (toe.north) -- (ktw.north)
+	node[midway,above] {Sleeping Lock};
+    \draw [<->] (to.east) -- (kt.west) node[midway,below] {Wakeup};
 \end{tikzpicture}
 \end{frame}
 
