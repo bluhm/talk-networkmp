@@ -88,6 +88,61 @@
 \end{itemize}
 \end{frame}
 
+\subsection{History}
+\begin{frame}{History}
+\begin{itemize}
+\item interrupts with spl
+\item kernel lock
+\item kernel threads
+\item MP safe subsystems
+\item netlock
+\item multiqueue NIC
+\item shared netlock
+\end{itemize}
+\end{frame}
+
+\subsection{Single Processor}
+\begin{frame}{Single Processor}
+\begin{tikzpicture}
+    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 0) node [draw] (up) {Kernel Upper Half};
+    \draw [->] (user) -- (up) node[midway,right] {System Call};
+    \path (0, -2) node [draw] (lo) {Kernel Lower Half};
+    \draw [<-] (up) -- (lo) node[midway,right] {Interrupt};
+    \path (up.south) node (ups) {} (lo.north) node (lon) {};
+    \draw [->,red] (ups.west) -- (lon.west) node[midway,left,red] {SPL};
+    \path (0, -4) node [draw] (hw) {Hardware};
+    \draw [<-] (lo) -- (hw) node[midway,right] {Handler};
+    \path (lo.south) node (los) {} (hw.north) node (hwn) {};
+    \draw [->,red,dashed] (los.west) -- (hwn.west) node[midway,left,red] {SPL};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Multi Processor Kernel Lock}
+\begin{frame}{Multi Processor Kernel Lock}
+\begin{tikzpicture}
+    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 0) node [draw] (up) {Kernel Upper Half};
+    \draw [->] (user) -- (up) node[midway,right] {System Call};
+    \path (0, -2) node [draw] (lo) {Kernel Lower Half};
+    \draw [<-] (up) -- (lo) node[midway,right] {Interrupt};
+    \path (up.south) node (ups) {} (lo.north) node (lon) {};
+    \draw [->,red] (ups.west) -- (lon.west) node[midway,left,red] {SPL};
+    \path (0, -4) node [draw] (hw) {Hardware};
+    \draw [<-] (lo) -- (hw) node[midway,right] {Handler};
+    \path (lo.south) node (los) {} (hw.north) node (hwn) {};
+    \draw [->,red,dashed] (los.west) -- (hwn.west) node[midway,left,red] {SPL};
+
+    \path (8, 2) node [draw] (user1) {User Land};
+    \path (8, 0) node [draw] (up1) {Kernel Upper Half};
+    \draw [->] (user1) -- (up1) node[midway,right] {System Call};
+
+    \draw [<->,red] (up) -- (up1) node[midway,above] {Kernel Lock};
+    \draw [<->,red] (lo.east) -- (up1.south west) node[midway, below right]
+	{Kernel Lock};
+\end{tikzpicture}
+\end{frame}
+
 \subsection{Multi User, Multi Purpose Hardware Setup}
 \begin{frame}{Multi User, Multi Purpose Hardware Setup}
 \begin{tikzpicture}
