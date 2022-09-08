@@ -1,0 +1,11 @@
+Slides for my talk about faster networking on OpenBSD.
+
+For a long time OpenBSD network stack was not running on multiple
+processors in parallel.  Partially it has been made MP ready in the
+previous releases.  This talk gives an overview of what has been
+achieved, explains pitfalls, and shows the tooling used.  In kernel
+development, and especially in multi processor environments, a good
+test equipment is necessary.  The test results provided on
+http://bluhm.genua.de/perform/results/perform.html give insight
+about progress during the development process.  Interesting changes
+and their effects will be explained.
