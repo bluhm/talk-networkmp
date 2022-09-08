@@ -51,8 +51,7 @@
 \item IPsec
 \item IP input, output, forwarding
 \item pf
-\item ARP, ND6
-\item routing
+\item routing, ARP, ND6
 \item interface
 \item driver
 \item hardware
@@ -243,7 +242,7 @@
     \path (10, 2) node [draw] (user) {User Land};
     \path (10, 0) node [draw] (sl) {Socket Layer};
     \path (7, -1) pic (sbq) {queue};
-    \path (5, -2) node [draw] (st) {Softnet Task};
+    \path (5, -2) node [draw] (st) {Softnet Thread};
     \path (2, -3) pic (ifq) {queue};
     \path (0, -4) node [draw] (ni) {Network Interrupt};
 
@@ -252,6 +251,9 @@
     \draw [->] (st.north) |- (sbq-west) node [midway,above] {Socket Buffer};
     \draw [->] (sbq-east) -| (sl.south);
     \draw [->] (user) -- (sl) node [midway,right] {recv(2)};
+
+    \path (st.north west) node (stnw) {};
+    \draw [<->,red] (stnw.east) |- (sl.west) node[midway,above] {Net Lock};
 \end{tikzpicture}
 \end{frame}
 
@@ -261,121 +263,87 @@
     \path (0, 2) node [draw] (user) {User Land};
     \path (0, 0) node [draw] (sl) {Socket Layer};
     \path (2, -1) pic (sbq) {queue};
-    \path (5, -2) node [draw] (st) {Softnet Task};
+    \path (5, -2) node [draw] (st) {Softnet Thread};
     \path (7, -3) pic (ifq) {queue};
     \path (10, -4) node [draw] (ns) {Network Start};
 
     \draw [->] (user) -- (sl) node [midway,right] {send(2)};
-    \draw [->] (sl.south) |- (sbq-west) node [midway,below] {Socket Buffer};
-    \draw [->] (sbq-east) -| (st.north) node [midway,right] {(optional)};
+    \draw [->] (sl.south) |- (sbq-west)
+	node [midway,below,label=below:(optional)] {Socket Buffer};
+    \draw [->] (sbq-east) -| (st.north);
     \draw [->] (st.south) |- (ifq-west) node [midway,below] {Interface Queue};
-    \draw [->] (ifq-east) -| (ns.north) node [midway,right] {(optional)};
+    \draw [->] (ifq-east) -| (ns.north);
+
+    \path (st.north east) node (stne) {};
+    \draw [<->,red] (stne.west) |- (sl.east) node[midway,above] {Net Lock};
 \end{tikzpicture}
 \end{frame}
 
 \subsection{Softnet Forwarding}
 \begin{frame}{Softnet Forwarding}
 \begin{tikzpicture}
+    \path (5, 2) node [draw] (if) {ifconfig};
+    \path (5, 0) node [draw] (kc) {Kernel Config};
+    \draw [->] (if) -- (kc) node [midway,right] {ioctl(2)};
+
     \path (0, -4) node [draw] (ni) {Network Interrupt};
     \path (1, -3) pic (ifiq) {queue};
-    \path (5, -2) node [draw] (st) {Softnet Task};
+    \path (5, -2) node [draw] (st) {Softnet Thread};
     \path (7, -3) pic (ifoq) {queue};
     \path (10, -4) node [draw] (ns) {Network Start};
 
     \draw [->] (ni.north) |- (ifiq-west) node [midway,above] {Interface Queue};
-    \draw [->] (ifiq-east) -| (st.south west);
-    \draw [->] (st.south east) |- (ifoq-west);
+    \draw [<-] (st.south west) +(.5, 0) |- (ifiq-east);
+    \draw [->] (st.south east) +(-.5, 0) |- (ifoq-west);
     \draw [->] (ifoq-east) -| (ns.north) node [midway,above] {Interface Queue};
 
-    \path (2, -1) node (ii) {ip\_input()};
-    \path (5, -1) node (if) {ip\_forward()};
-    \path (8, -1) node (io) {ip\_output()};
+    \path (kc.south) node (kcs) {} (st.north) node (stn) {};
+    \draw [<-,red] (stn.west) -- (kcs.west)
+	node [midway,left] {Exclusive Net Lock};
+    \draw [->,red] (stn.east) -- (kcs.east)
+	node [midway,right] {Shared Net Lock};
+\end{tikzpicture}
+\end{frame}
 
+\subsection{Softnet Forwarding Multi Processor}
+\begin{frame}{Softnet Forwarding Multi Processor}
+\begin{tikzpicture}
+    \path (0, -4) node [draw,label={[blue]right:x1,x4,x8}]
+	(ni) {Network Interrupt};
+    \path (1, -3) pic (ifiq) {queue};
+    \path (5, -2) node [draw,label={[blue]below:x4}]
+	(st) {Softnet Threads};
+    \path (7, -3) pic (ifoq) {queue};
+    \path (10, -4) node [draw,label={[blue]left:x1,x4,x8}]
+	(ns) {Network Start};
+
+    \draw [->] (ni.north) |- (ifiq-west) node [midway,above] {Interface Queue};
+    \draw [<-] (st.south west) +(.5, 0) |- (ifiq-east);
+    \draw [->] (st.south east) +(-.5, 0) |- (ifoq-west);
+    \draw [->] (ifoq-east) -| (ns.north) node [midway,above] {Interface Queue};
+
+    \path (2, -1) node [label={[blue]left:x4}] (ii) {ip\_input()};
+    \path (5, -1) node (if) {ip\_forward()};
+    \path (8, -1) node [label={[blue]right:x4}] (io) {ip\_output()};
+
+    \draw (ii.south west) -- (st.north west);
+    \draw (io.south east) -- (st.north east);
     \draw [->] (ii.east) -- (if.west);
     \draw [->] (if.east) -- (io.west);
 
+    \draw [->] (ii) -- +(0, 1) node [anchor=south,label={[blue]above:x1}]
+	{pf\_test()};
+    \path (if) +(0, 1) node [anchor=south,label={[blue]above:x?}]
+	(rt) {rtalloc()};
+    \draw [->] (ii.north east) -- (rt.south west);
+    \draw [->] (io) -- +(0, 1) node [anchor=south,label={[blue]above:x1}]
+	{pf\_test()};
 \end{tikzpicture}
 \end{frame}
 
 
 
 
-\subsection{Multi User, Multi Purpose Hardware Setup}
-\begin{frame}{Multi User, Multi Purpose Hardware Setup}
-\begin{tikzpicture}
-    \path (-5.8, 0) node [draw] (s1) {Source 1};
-    \path (-5.8,-1) node [draw] (s2) {Source 2};
-    \path (-5.8,-2) node             {\dots};
-    \path (-5.8,-3) node [draw] (s3) {Source n};
-    \path (s1.north east) -- (s1.south east)
-     node (s11) [pos=0.2] {} node (s12) [pos=0.5] {} node (s13) [pos=0.8] {};
-    \path (s2.north east) -- (s2.south east)
-     node (s21) [pos=0.2] {} node (s22) [pos=0.5] {} node (s23) [pos=0.8] {};
-    \path (s3.north east) -- (s3.south east)
-     node (s31) [pos=0.2] {} node (s32) [pos=0.5] {} node (s33) [pos=0.8] {};
-
-    \path ( 0, 0) node [draw,minimum width=5cm] (s)  {Switch};
-    \path (s.north west) -- (s.south west)
-     node (sw1) [pos=0.2] {} node (sw2) [pos=0.5] {} node (sw3) [pos=0.8] {};
-    \path (s.north east) -- (s.south east)
-     node (se1) [pos=0.2] {} node (se2) [pos=0.5] {} node (se3) [pos=0.8] {};
-
-    \path ( 5.8, 0) node [draw] (d1) {Drain 1};
-    \path ( 5.8,-1) node [draw] (d2) {Drain 2};
-    \path ( 5.8,-2) node             {\dots};
-    \path ( 5.8,-3) node [draw] (d3) {Drain n};
-    \path (d1.north west) -- (d1.south west)
-     node (d11) [pos=0.2] {} node (d12) [pos=0.5] {} node (d13) [pos=0.8] {};
-    \path (d2.north west) -- (d2.south west)
-     node (d21) [pos=0.2] {} node (d22) [pos=0.5] {} node (d23) [pos=0.8] {};
-    \path (d3.north west) -- (d3.south west)
-     node (d31) [pos=0.2] {} node (d32) [pos=0.5] {} node (d33) [pos=0.8] {};
-
-    \draw [->] (s11.center) -- (sw1.center) node [pos=.5,above] {1 Gbit};
-    \draw [->] (s12.center) -- (sw1.center);
-    \draw [->] (s13.center) -- (sw1.center);
-    \draw [->] (s21.center) -- (sw2.center);
-    \draw [->] (s22.center) -- (sw2.center);
-    \draw [->] (s23.center) -- (sw2.center);
-    \draw [->] (s31.center) -- (sw3.center);
-    \draw [->] (s32.center) -- (sw3.center);
-    \draw [->] (s33.center) -- (sw3.center);
-
-    \draw [<-] (d11.center) -- (se1.center) node [pos=.5,above] {1 Gbit};
-    \draw [<-] (d12.center) -- (se1.center);
-    \draw [<-] (d13.center) -- (se1.center);
-    \draw [<-] (d21.center) -- (se2.center);
-    \draw [<-] (d22.center) -- (se2.center);
-    \draw [<-] (d23.center) -- (se2.center);
-    \draw [<-] (d31.center) -- (se3.center);
-    \draw [<-] (d32.center) -- (se3.center);
-    \draw [<-] (d33.center) -- (se3.center);
-
-    \path (0,-2) node [draw] (t1) {Target 1};
-    \path (0,-3) node [draw] (t2) {Target 2};
-    \path (0,-4) node             {\dots};
-    \path (0,-5) node [draw] (t3) {Target n};
-    \path (s.south) -- (s.south west)
-     node (ssw1) [pos=.7] {} node (ssw2) [pos=.8] {} node (ssw3) [pos=.9] {};
-    \draw [->] (ssw1.center) |- (t1.west);
-    \draw [->] (ssw2.center) |- (t2.west);
-    \draw [->] (ssw3.center) |- (t3.west) node [pos=.4,left]{10 Gbit};
-    \path (s.south) -- (s.south east)
-     node (sse1) [pos=.7] {} node (sse2) [pos=.8] {} node (sse3) [pos=.9] {};
-    \draw [<-] (sse1.center) |- (t1.east);
-    \draw [<-] (sse2.center) |- (t2.east);
-    \draw [<-] (sse3.center) |- (t3.east) node [pos=.4,right]{10 Gbit};
-\end{tikzpicture}
-\end{frame}
-
-\subsection{Performance Hardware Design}
-\begin{frame}{Performance Hardware Design}
-\begin{tikzpicture}
-    \path (  0,   0) node [draw] (local) {Target};
-    \path (  4,   0) node [draw] (remote) {Target};
-    \draw [->] (local) -- (remote) node [midway,above] {10 Gbit};
-\end{tikzpicture}
-\end{frame}
 
 \section{How does it work?}
 
