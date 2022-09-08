@@ -16,6 +16,7 @@
 %\usepackage[nomixage,puffy]{genuaslides}
 \usetheme{Frankfurt}
 \usepackage{tikz}
+\usetikzlibrary{positioning}
 \usetikzlibrary{shapes.geometric}
 \usepackage{adjustbox}
 \usepackage{graphicx}
@@ -37,6 +38,8 @@
 \setcounter{tocdepth}{1}
 \tableofcontents[currentsection]
 \end{frame}
+
+\section{Overview}
 
 \subsection{Network Layers}
 \begin{frame}{Network Layers}
@@ -63,6 +66,7 @@
 \item malloc, pools
 \item tasks
 \item multicast
+\item ifconfig ioctl
 \item pseudo devices:
     aggr bpe bridge carp egre enc eoip etherip gif gre lo mgre mpe
     mpip mpw nvgre pair pflog pflow pfsync ppp pppoe svlan tap tpmr
@@ -100,6 +104,8 @@
 \item shared netlock
 \end{itemize}
 \end{frame}
+
+\section{Kernel Context}
 
 \subsection{Single Processor}
 \begin{frame}{Single Processor}
@@ -216,6 +222,83 @@
     \draw [<->] (to.east) -- (kt.west) node[midway,below] {Wakeup};
 \end{tikzpicture}
 \end{frame}
+
+\section{Network Stack}
+
+\tikzset{
+    queue/.pic={
+	\path node [draw] (q1) {}
+	    node [draw,right=0 of q1.east,anchor=west] (q2) {}
+	    node [draw,right=0 of q2.east,anchor=west] (q3) {}
+	    node [right=0 of q3.east,anchor=west] (q4) {\dots}
+	    node [draw,right=0 of q4.east,anchor=west] (q5) {};
+	\coordinate (-west) at (q1.west);
+	\coordinate (-east) at (q5.east);
+    }
+}
+
+\subsection{Softnet Receive}
+\begin{frame}{Softnet Receive}
+\begin{tikzpicture}
+    \path (10, 2) node [draw] (user) {User Land};
+    \path (10, 0) node [draw] (sl) {Socket Layer};
+    \path (7, -1) pic (sbq) {queue};
+    \path (5, -2) node [draw] (st) {Softnet Task};
+    \path (2, -3) pic (ifq) {queue};
+    \path (0, -4) node [draw] (ni) {Network Interrupt};
+
+    \draw [->] (ni.north) |- (ifq-west) node [midway,above] {Interface Queue};
+    \draw [->] (ifq-east) -| (st.south);
+    \draw [->] (st.north) |- (sbq-west) node [midway,above] {Socket Buffer};
+    \draw [->] (sbq-east) -| (sl.south);
+    \draw [->] (user) -- (sl) node [midway,right] {recv(2)};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Softnet Send}
+\begin{frame}{Softnet Send}
+\begin{tikzpicture}
+    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 0) node [draw] (sl) {Socket Layer};
+    \path (2, -1) pic (sbq) {queue};
+    \path (5, -2) node [draw] (st) {Softnet Task};
+    \path (7, -3) pic (ifq) {queue};
+    \path (10, -4) node [draw] (ns) {Network Start};
+
+    \draw [->] (user) -- (sl) node [midway,right] {send(2)};
+    \draw [->] (sl.south) |- (sbq-west) node [midway,below] {Socket Buffer};
+    \draw [->] (sbq-east) -| (st.north) node [midway,right] {(optional)};
+    \draw [->] (st.south) |- (ifq-west) node [midway,below] {Interface Queue};
+    \draw [->] (ifq-east) -| (ns.north) node [midway,right] {(optional)};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Softnet Forwarding}
+\begin{frame}{Softnet Forwarding}
+\begin{tikzpicture}
+    \path (0, -4) node [draw] (ni) {Network Interrupt};
+    \path (1, -3) pic (ifiq) {queue};
+    \path (5, -2) node [draw] (st) {Softnet Task};
+    \path (7, -3) pic (ifoq) {queue};
+    \path (10, -4) node [draw] (ns) {Network Start};
+
+    \draw [->] (ni.north) |- (ifiq-west) node [midway,above] {Interface Queue};
+    \draw [->] (ifiq-east) -| (st.south west);
+    \draw [->] (st.south east) |- (ifoq-west);
+    \draw [->] (ifoq-east) -| (ns.north) node [midway,above] {Interface Queue};
+
+    \path (2, -1) node (ii) {ip\_input()};
+    \path (5, -1) node (if) {ip\_forward()};
+    \path (8, -1) node (io) {ip\_output()};
+
+    \draw [->] (ii.east) -- (if.west);
+    \draw [->] (if.east) -- (io.west);
+
+\end{tikzpicture}
+\end{frame}
+
+
+
 
 \subsection{Multi User, Multi Purpose Hardware Setup}
 \begin{frame}{Multi User, Multi Purpose Hardware Setup}
