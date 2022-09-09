@@ -31,16 +31,17 @@ use Html;
 use Testvars qw(%TESTDESC);
 
 my %opts;
-getopts('vnB:d:E:Lp:r:X:x:Y:y:', \%opts) or do {
+getopts('vnB:d:E:LN:p:r:X:x:Y:y:', \%opts) or do {
     print STDERR <<"EOF";
-usage: gnuplot.pl [-vn] [-B date] [-d date] [-E date] -p plot [-r release]
-	[-x min] [-X max] [-y min] [-Y max]
+usage: gnuplot.pl [-Lnv] [-B date] [-d date] [-E date] [-N number] -p plot
+	[-r release] [-x min] [-X max] [-y min] [-Y max]
     -v		verbose
     -n		dry run
     -B date	begin date of x range, inclusive
     -d date	run date of performance test
     -E date	end date of x range, inclusive
     -L		create LaTeX and EPS output instead of PNG and HTML
+    -N number	test number
     -p plot	(tcp|tcp6|udp|udp6|linux|linux6|forward|forward6|ipsec|make|fs)
     -r release	OpenBSD version number
     -x min	x range minimum
@@ -94,6 +95,7 @@ if (defined $opts{Y}) {
 	or die "Y max '$opts{Y}' not a number";
     $ymax = $opts{Y}
 }
+my $number = $opts{N};
 my $plot = $opts{p}
     or die "Option -p plot missing";
 @ARGV and die "No arguments allowed";
@@ -111,7 +113,9 @@ my $gplotfile = "$performdir/bin/plot.gp";
     or die "No gnuplot file '$gplotfile'";
 
 my $gnuplotdir = "results/gnuplot";
-if ($date) {
+if ($latex) {
+    $gnuplotdir = ".";
+} elsif ($date) {
     my $reldate = "$date";
     $reldate = "$release/$reldate" if $release;
     $gnuplotdir = "results/$reldate/gnuplot";
@@ -123,18 +127,21 @@ chdir($gnuplotdir)
 $gnuplotdir = getcwd();
 
 my $datafile = "$plot.data";
-$datafile = "$performdir/results/test.data" if $latex && ! -f $datafile;
+$datafile = "test.data" if $latex;
 -f $datafile
     or die "No test data file '$datafile' in $gnuplotdir";
 
 my $prefix = "";
+$prefix .= "gnuplot/" if $latex;
 $prefix .= "$release-" if $release && ($begin || $end);
+$prefix .= "$date-" if $date && $latex;
 $prefix .= "$plot";
+$prefix .= "-$number" if $number;
 
 my ($UNIT, %SUBTESTS);
 parse_data_file();
 
-my @files = $latex ? glob("$prefix.tex") :
+my @files = $latex ? (glob("$prefix.tex"), glob("$prefix.eps")) :
     (glob("$prefix.png"), glob("${prefix}_*.png"), glob("$prefix.html"));
 unlink(@files) if @files;
 exit if !keys %SUBTESTS && ($date || $release);
@@ -171,6 +178,7 @@ sub parse_data_file {
 sub create_plot_files {
     # sort by description, use test values for gnuplot
     my @tests = map { $SUBTESTS{$_} } sort keys %SUBTESTS;
+    @tests = $tests[$number] if $number;
     my @quirks = sort keys %{{quirks()}};
 
     my $title = uc($plot). " Performance";
