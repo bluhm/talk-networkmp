@@ -36,7 +36,7 @@
 
 \begin{frame}{Agenda}
 \setcounter{tocdepth}{1}
-\tableofcontents[currentsection]
+\tableofcontents
 \end{frame}
 
 \section{Overview}
@@ -109,9 +109,9 @@
 \subsection{Single Processor}
 \begin{frame}{Single Processor}
 \begin{tikzpicture}
-    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 2) node [draw] (ul) {User Land};
     \path (0, 0) node [draw] (to) {Kernel Top Half};
-    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \draw [->] (ul) -- (to) node[midway,right] {System Call};
     \path (0, -2) node [draw] (bo) {Kernel Bottom Half};
     \draw [<-] (to.south) -- (bo.north) node[midway,right] {Interrupt};
     \path (to.south) node (tos) {} (bo.north) node (bon) {};
@@ -126,9 +126,9 @@
 \subsection{Multi Processor Kernel Lock}
 \begin{frame}{Multi Processor Kernel Lock}
 \begin{tikzpicture}
-    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 2) node [draw] (ul) {User Land};
     \path (0, 0) node [draw] (to) {Kernel Top Half};
-    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \draw [->] (ul) -- (to) node[midway,right] {System Call};
     \path (0, -2) node [draw] (bo) {Kernel Bottom Half};
     \draw [<-] (to.south) -- (bo.north) node[midway,right] {Interrupt};
     \path (to.south) node (tos) {} (bo.north) node (bon) {};
@@ -138,9 +138,9 @@
     \path (bo.south) node (bos) {} (hw.north) node (hwn) {};
     \draw [->,red,dashed] (bos.west) -- (hwn.west) node[midway,left,red] {SPL};
 
-    \path (8, 2) node [draw] (user1) {User Land};
+    \path (8, 2) node [draw] (ul1) {User Land};
     \path (8, 0) node [draw] (to1) {Kernel Top Half};
-    \draw [->] (user1) -- (to1) node[midway,right] {System Call};
+    \draw [->] (ul1) -- (to1) node[midway,right] {System Call};
 
     \draw [<->,red] (to) -- (to1) node[midway,above] {Kernel Lock};
     \draw [<->,red] (bo.north east) -- (to1.south west)
@@ -151,9 +151,9 @@
 \subsection{Multi Processor Fine Grained Mutex}
 \begin{frame}{Multi Processor Fine Grained Mutex}
 \begin{tikzpicture}
-    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 2) node [draw] (ul) {User Land};
     \path (0, 0) node [draw] (to) {Kernel Top Half};
-    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \draw [->] (ul) -- (to) node[midway,right] {System Call};
     \path (0, -2) node [draw] (bo) {Kernel Bottom Half};
     \draw [<-] (to.south) -- (bo.north) node[midway,right] {Interrupt};
     \path (to.south) node (tos) {} (bo.north) node (bon) {};
@@ -161,9 +161,9 @@
     \path (0, -4) node [draw] (hw) {Hardware};
     \draw [<-] (bo) -- (hw) node[midway,right] {Handler};
 
-    \path (8, 2) node [draw] (user1) {User Land};
+    \path (8, 2) node [draw] (ul1) {User Land};
     \path (8, 0) node [draw] (to1) {Kernel Top Half};
-    \draw [->] (user1) -- (to1) node[midway,right] {System Call};
+    \draw [->] (ul1) -- (to1) node[midway,right] {System Call};
 
     \draw [<->,red] (to) -- (to1) node[midway,above] {Mutex};
     \draw [<->,red] (bo.north east) -- (to1.south west)
@@ -174,9 +174,9 @@
 \subsection{Multi Processor Multi Queue}
 \begin{frame}{Multi Processor Multi Queue}
 \begin{tikzpicture}
-    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 2) node [draw] (ul) {User Land};
     \path (0, 0) node [draw] (to) {Kernel Top Half};
-    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \draw [->] (ul) -- (to) node[midway,right] {System Call};
     \path (0, -2) node [draw] (bo) {Kernel Bottom Half};
     \draw [<-] (to.south) -- (bo.north) node[midway,right] {Interrupt};
     \path (to.south) node (tos) {} (bo.north) node (bon) {};
@@ -184,9 +184,9 @@
     \path (4, -4) node [draw] (hw) {Hardware};
     \draw [<-] (bo) -- (hw.north west) node[midway,below left] {Handler};
 
-    \path (8, 2) node [draw] (user1) {User Land};
+    \path (8, 2) node [draw] (ul1) {User Land};
     \path (8, 0) node [draw] (to1) {Kernel Top Half};
-    \draw [->] (user1) -- (to1) node[midway,right] {System Call};
+    \draw [->] (ul1) -- (to1) node[midway,right] {System Call};
     \path (8, -2) node [draw] (bo1) {Kernel Bottom Half};
     \draw [<-] (to1.south) -- (bo1.north) node[midway,left] {Interrupt};
     \path (to1.south) node (tos1) {} (bo1.north) node (bon1) {};
@@ -205,9 +205,9 @@
 \subsection{Kernel Threads}
 \begin{frame}{Kernel Threads}
 \begin{tikzpicture}
-    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 2) node [draw] (ul) {User Land};
     \path (0, 0) node [draw] (to) {Kernel Top Half};
-    \draw [->] (user) -- (to) node[midway,right] {System Call};
+    \draw [->] (ul) -- (to) node[midway,right] {System Call};
     \path (4, -2) node [draw] (bo) {Kernel Bottom Half};
     \draw [<-] (to.south) -- (bo.north west) node[midway,below left] {Wakeup};
 
@@ -239,7 +239,7 @@
 \subsection{Softnet Receive}
 \begin{frame}{Softnet Receive}
 \begin{tikzpicture}
-    \path (10, 2) node [draw] (user) {User Land};
+    \path (10, 2) node [draw] (ul) {User Land};
     \path (10, 0) node [draw] (sl) {Socket Layer};
     \path (7, -1) pic (sbq) {queue};
     \path (5, -2) node [draw] (st) {Softnet Thread};
@@ -250,7 +250,7 @@
     \draw [->] (ifq-east) -| (st.south);
     \draw [->] (st.north) |- (sbq-west) node [midway,above] {Socket Buffer};
     \draw [->] (sbq-east) -| (sl.south);
-    \draw [->] (user) -- (sl) node [midway,right] {recv(2)};
+    \draw [->] (ul) -- (sl) node [midway,right] {recv(2)};
 
     \path (st.north west) node (stnw) {};
     \draw [<->,red] (stnw.east) |- (sl.west) node[midway,above] {Net Lock};
@@ -260,14 +260,14 @@
 \subsection{Softnet Send}
 \begin{frame}{Softnet Send}
 \begin{tikzpicture}
-    \path (0, 2) node [draw] (user) {User Land};
+    \path (0, 2) node [draw] (ul) {User Land};
     \path (0, 0) node [draw] (sl) {Socket Layer};
     \path (2, -1) pic (sbq) {queue};
     \path (5, -2) node [draw] (st) {Softnet Thread};
     \path (7, -3) pic (ifq) {queue};
     \path (10, -4) node [draw] (ns) {Network Start};
 
-    \draw [->] (user) -- (sl) node [midway,right] {send(2)};
+    \draw [->] (ul) -- (sl) node [midway,right] {send(2)};
     \draw [->] (sl.south) |- (sbq-west)
 	node [midway,below,label=below:(optional)] {Socket Buffer};
     \draw [->] (sbq-east) -| (st.north);
@@ -281,6 +281,22 @@
 
 \subsection{Softnet Forwarding}
 \begin{frame}{Softnet Forwarding}
+\begin{tikzpicture}
+    \path (0, -4) node [draw] (ni) {Network Interrupt};
+    \path (1, -3) pic (ifiq) {queue};
+    \path (5, -2) node [draw] (st) {Softnet Thread};
+    \path (7, -3) pic (ifoq) {queue};
+    \path (10, -4) node [draw] (ns) {Network Start};
+
+    \draw [->] (ni.north) |- (ifiq-west) node [midway,above] {Interface Queue};
+    \draw [<-] (st.south west) +(.5, 0) |- (ifiq-east);
+    \draw [->] (st.south east) +(-.5, 0) |- (ifoq-west);
+    \draw [->] (ifoq-east) -| (ns.north) node [midway,above] {Interface Queue};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Configuration Lock}
+\begin{frame}{Configuration Lock}
 \begin{tikzpicture}
     \path (5, 2) node [draw] (if) {ifconfig};
     \path (5, 0) node [draw] (kc) {Kernel Config};
@@ -305,8 +321,8 @@
 \end{tikzpicture}
 \end{frame}
 
-\subsection{Softnet Forwarding Multi Processor}
-\begin{frame}{Softnet Forwarding Multi Processor}
+\subsection{Parallel Forwarding}
+\begin{frame}{Parallel Forwarding}
 \begin{tikzpicture}
     \path (0, -4) node [draw,label={[blue]right:x1,x4,x8}]
 	(ni) {Network Interrupt};
@@ -338,6 +354,65 @@
     \draw [->] (ii.north east) -- (rt.south west);
     \draw [->] (io) -- +(0, 1) node [anchor=south,label={[blue]above:x1}]
 	{pf\_test()};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Protocol Queue}
+\begin{frame}{Protocol Queue}
+\begin{tikzpicture}
+    \path (9, 0) node [draw,label={[blue]right:x1}] (sl) {Socket Layer};
+    \path (6.5, -1) pic (sbq) {queue};
+    \path (6, -2) node [draw,label={[blue]right:x1}] (sp) {Softnet Proto};
+    \path (3.5, -3) pic (ipq) {queue};
+    \path (3, -4) node [draw,label={[blue]right:x4}] (si) {Softnet IP};
+    \path (0.5, -5) pic (ifq) {queue};
+    \path (0, -6) node [draw,label={[blue]right:x1,x4,x8}]
+	(ni) {Network Interrupt};
+    \draw [->] (ni.north) |- (ifq-west);
+    \draw [->] (ifq-east) -| (si.south);
+    \draw [->] (si.north) |- (ipq-west);
+    \draw [->] (ipq-east) -| (sp.south);
+    \draw [->] (sp.north) |- (sbq-west);
+    \draw [->] (sbq-east) -| (sl.south);
+
+    \path (sl.south west) node (slsw) {};
+    \path (sp.north west) node (spnw) {};
+    \draw [<->,red] (spnw.east) |- (slsw.north)
+	node[midway,above] {Exclusive Net Lock};
+    \path (si.north west) node (sinw) {};
+    \draw [<->,red] (sinw.east) |- (sp.west)
+	node[midway,above] {Shared Net Lock};
+\end{tikzpicture}
+\end{frame}
+
+\subsection{Parallel Receive, UDP coming soon}
+\begin{frame}{Parallel Receive, UDP coming soon}
+\begin{tikzpicture}
+    \path (10, 2) node [draw] (ul) {User Land};
+    \path (10, 0) node [draw] (sl) {Socket Layer};
+    \path (6.5, -1) pic (sbq) {queue};
+    \path (3, -2) node [draw] (si) {Softnet IP};
+    \path (si.east) node [draw,anchor=west,label={[blue]below:x4}]
+	(sp) {Softnet Proto};
+    \path (0.5, -3) pic (ifq) {queue};
+    \path (0, -4) node [draw] (ni) {Network Interrupt};
+
+    \draw [->] (ul) -- (sl);
+    \path (ul.south) node (uls) {};
+    \path (sl.north) node (sln) {};
+    \draw [->] (uls.west) -- (sln.west);
+    \draw [->] (uls.east) -- (sln.east) node [midway,right] {recv(2)};
+    \draw [->] (ni.north) |- (ifq-west);
+    \draw [->] (ifq-east) -| (si.south);
+    \draw [->] (sp.north) |- (sbq-west);
+    \draw [->] (sbq-east) -| (sl.south);
+
+    \path (si.north west) node (sinw) {};
+    \draw [<->,red] (sinw.east) |- (sl.west)
+	node[midway,above] {Shared Net Lock};
+    \path (sl.south east) node (slse) {};
+    \draw [<->,red] (slse.west) |- (sp.east)
+	node[near end,below] {per PCB Mutex};
 \end{tikzpicture}
 \end{frame}
 
