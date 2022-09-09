@@ -25,25 +25,31 @@ GNUPLOTS = \
     2019-10-06T18:52:38Z make - - - 0 750
 HTMLS =		2019-04-16T00-00-00Z--2019-04-17T00-00-00Z
 
-.for d t n x X y Y in ${GNUPLOTS}
+results/test.data:
+	ftp http://bluhm.genua.de/perform/results/test.data
+	mv test.data results/
 
-p =		gnuplot/${d:S/:/-/g}-$t
-#TEXSRCS +=	gnuplot/${d:S/:/-/g}-$t.tex
-#OTHER +=	gnuplot/${d:S/:/-/g}-$t.pdf
-CLEAN_FILES +=	gnuplot/${d:S/:/-/g}-$t.{tex,eps,pdf}
+.for d p n x X y Y in ${GNUPLOTS}
 
-$p.tex: gnuplot.pl Buildquirks.pm plot.gp test-$t.data
-	mkdir -p ${@:H}
+g =		gnuplot/${d:S/:/-/g}-$p
+#TEXSRCS +=	gnuplot/${d:S/:/-/g}-$p.tex
+#OTHER +=	gnuplot/${d:S/:/-/g}-$p.pdf
+CLEAN_FILES +=	gnuplot/${d:S/:/-/g}-$p.{tex,eps,pdf}
+
+.PATH: bin
+
+$g.tex: gnuplot.pl Buildquirks.pm Html.pm Testvars.pm plot.gp results/test.data
+	mkdir -p results/$d/gnuplot gnuplot
 	rm -f $@
-	perl gnuplot.pl -D $d -T $t ${n:N-:S/^/-N /} \
+	perl bin/gnuplot.pl -L -d $d -p $p ${n:N-:S/^/-N /} \
 	    ${x:N-:S/^/-x /} ${X:N-:S/^/-X /} \
 	    ${y:N-:S/^/-y /} ${Y:N-:S/^/-Y /}
-	cp gnuplot/$d-$t.tex $@
+	cp results/$d/gnuplot/$p.tex $@
 
-$p.eps: $p.tex
-	cp gnuplot/$d-$t.eps $@
+$g.eps: $g.tex
+	cp results/$d/gnuplot/$p.eps $@
 
-$p.pdf: $p.eps
+$g.pdf: $g.eps
 	epstopdf ${@:.pdf=.eps}
 
 .endfor
