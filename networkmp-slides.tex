@@ -20,8 +20,7 @@
 \usetikzlibrary{shapes.geometric}
 \usepackage{adjustbox}
 \usepackage{graphicx}
-\graphicspath{gnuplot}
-\usepackage{multirow}
+\usepackage{transparent}
 
 \author{Alexander Bluhm}
 \title{Faster OpenBSD Networking}
@@ -425,136 +424,29 @@
     \end{adjustbox}
 \end{frame}
 
-
-
-\section{How does it work?}
-
-\begin{frame}{Agenda}
-\setcounter{tocdepth}{1}
-\tableofcontents[currentsection]
+\subsection{UDP Receive}
+\begin{frame}{UDP Receive}
+    \begin{adjustbox}{totalheight=\textheight-3\baselineskip}
+	\input{gnuplot/2022-09-04T20:23:45Z-udp-2.tex}
+    \end{adjustbox}
 \end{frame}
 
-\subsection{Performance Goals}
-\begin{frame}{Performance Goals}
-\begin{itemize}
-    \item history
-    \item reproducable
-    \item details available
-    \item drill down
-    \item automatic
-\end{itemize}
+
+\subsection{UDP Receive}
+\begin{frame}{UDP Receive}
+%    \def\svgwidth{\textwidth}
+%	\input{udpbench-recv-1662249600.pdf_tex}
+    \includegraphics[width=\textwidth]{udpbench-recv-1662249600.pdf}
 \end{frame}
 
-\subsection{Performance History}
-\begin{frame}{Performance History}
-\begin{tikzpicture}
-    \path ( 1, 1) node [draw,circle,align=center,minimum width=2.5cm]
-	(release) {install\\release};
-    \path ( 3,-2) node [draw,circle,align=center,minimum width=2.5cm]
-	(checkout) {checkout\\at date};
-    \path ( 6,-2) node [draw,circle,align=center,minimum width=2.5cm]
-	(kernel) {compile\\kernel};
-    \path ( 9,-2) node [draw,circle,align=center,minimum width=2.5cm]
-	(test) {run\\tests};
-    \path ( 6, 2) node [draw,circle,align=center,minimum width=2.5cm]
-	(step) {advance\\by step};
-    \path (11, 1) node [draw,circle,align=center,minimum width=2.5cm]
-	(result) {collect\\results};
-    \draw [->] (release) -- (checkout);
-    \draw [->] (checkout) -- (kernel);
-    \draw [->] (kernel) -- (test);
-    \draw [->] (test) -- (result);
-    \draw [->] (test) -- (step);
-    \draw [->] (step) -- (checkout);
-\end{tikzpicture}
+\subsection{Receive Parallel}
+\begin{frame}{UDP Receive Parallel}
+    \includegraphics[width=\textwidth]{udpbench-soreceive-parallel.pdf}
 \end{frame}
 
-\subsection{Performance Hardware}
-\begin{frame}{Performance Hardware}
-\begin{tikzpicture}
-    \path (  0,   0) node [draw] (local1) {Target 1};
-    \path (  4,   0) node [draw] (remote1) {Target 1};
-    \draw [->] (local1) -- (remote1);
-    \path (  0,  -2) node [draw] (local2) {Target 2};
-    \path (  4,  -2) node [draw] (remote2) {Target 2};
-    \draw [<->] (local2) -- (remote2);
-    \path ( -4,  -2) node [draw,dashed] (linux) {Linux};
-    \draw [<->] (linux) -- (local2);
-\end{tikzpicture}
-\end{frame}
-
-\subsection{Performance Master}
-\begin{frame}{Performance Master}
-\begin{tikzpicture}
-    \path ( -2,   3) node (web) {web};
-    \path ( -2, 1.5) node [draw] (master) {master};
-    \path ( -2,-1.5) node [draw] (console) {console};
-    \path (  0,   0) node [draw,align=center] (local) {local\\target};
-    \path (  4,   0) node [draw,align=center] (remote) {remote\\target};
-    \draw (local) -- (remote);
-    \draw [->,red] (master) -- (web) node [midway,left] {publish};
-    \draw [->,red] (master) -- (console);
-    \draw [->,red] (master) |- (local) node [near start,left] {control};
-    \draw [->,red] (master) -| (local);
-    \draw [->,red] (master) -| (remote)
-	node [near start,above] {configure and compile};
-    \draw [->,red] (console) -| (local);
-    \draw [->,red] (console) -| (remote)
-	node [near start,below] {install release};
-\end{tikzpicture}
-\end{frame}
-
-\section{What are the findings?}
-
-\begin{frame}{Agenda}
-\setcounter{tocdepth}{1}
-\tableofcontents[currentsection]
-\end{frame}
-
-\subsection{Reproduce and Reboot}
-\begin{frame}{Reproduce and Reboot}
-\begin{tikzpicture}
-    \path ( 6,-2) node [draw,circle,align=center,minimum width=2.5cm]
-	(kernel) {compile\\kernel};
-    \path ( 9,-2) node [draw,circle,align=center,minimum width=2.5cm]
-	(test) {run\\tests};
-    \path (11,-4) node [draw,circle,align=center,minimum width=2.5cm]
-	(keep) {run\\again};
-    \path (14,-4) node [draw,circle,align=center,minimum width=2.5cm]
-	(reboot) {reboot\\machine};
-    \path (17,-4) node [draw,circle,align=center,minimum width=2.5cm]
-	(reorder) {relink\\kernel};
-    \draw [->] (checkout.east) -- (kernel);
-    \draw [->] (kernel) -- (test);
-    \draw [->] (test) -- (result);
-    \draw [->] (test) -- (step);
-    \draw [->] (test) -| (keep);
-    \draw [->] (test) -| (reboot);
-    \draw [->] (test) -| (reorder);
-    \draw [->] (reorder) -- (reboot);
-    \draw [->] (reboot) -- (keep);
-    \draw [->] (keep) -| (test);
-\end{tikzpicture}
-\end{frame}
-
-\subsection{Future Ideas}
-\begin{frame}{Future Ideas}
-\begin{itemize}
-    \item forwarding throughput
-    \item Linux client and server
-    \item testing patches
-    \item historic releases
-    \item file system performance
-\end{itemize}
-\end{frame}
-
-\subsection{Thanks}
-\begin{frame}{Thanks}
-\begin{itemize}
-    \item Jan Klemkow for Hardware Administration
-    \item Moritz Buhl for Visualization
-    \item genua for Hosting and Worktime
-\end{itemize}
+\subsection{UDP Parallel}
+\begin{frame}{UDP Parallel}
+    \includegraphics[width=\textwidth]{udpbench-udp-parallel.pdf}
 \end{frame}
 
 \subsection{Links}
@@ -562,13 +454,11 @@
 \begin{itemize}
     \small
     \item \url{http://bluhm.genua.de/}
-    \item \url{http://bluhm.genua.de/regress/results/regress.html}
     \item \url{http://bluhm.genua.de/perform/results/perform.html}
-    \item \url{http://bluhm.genua.de/perform/results/gnuplot/test.data}
+    \item \url{http://bluhm.genua.de/perform/results/test.data}
     \item \url{https://github.com/bluhm/regress-all}
     \item \url{https://github.com/bluhm/udpbench}
-    \item \url{https://github.com/younix/testmaster}
-    \item \url{https://github.com/bluhm/talk-perform}
+    \item \url{https://github.com/bluhm/talk-networkmp}
 \end{itemize}
 \end{frame}
 
