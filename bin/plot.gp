@@ -114,13 +114,13 @@ if (exists("RUN_DATE")) {
 		strcol(2) eq word(TESTS,test+1)? $6:NaN \
 	    ):NaN \
 	):NaN \
-    ) with points lc test/2+1 pt test/2+1
+    ) title word(TESTS,test)." ".word(TESTS,test+1) noenhanced ps 3
 } else {
     plot for [test = 1:words(TESTS):2] DATA_FILE using 4:( \
 	strcol(1) eq word(TESTS,test)? ( \
 	    strcol(2) eq word(TESTS,test+1)? $6:NaN \
 	):NaN \
-    ) with points lc test/2+1 pt test/2+1
+    ) title word(TESTS,test)." ".word(TESTS,test+1) noenhanced ps 3
 }
 
 if (LATEX) {

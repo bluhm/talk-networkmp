@@ -417,10 +417,31 @@
 
 \section{Performance Graphs}
 
-\subsection{Weekly from 6.2 to 6.3}
-\begin{frame}{Weekly from 6.2 to 6.3}
+\subsection{7.1 Forwarding}
+\begin{frame}{7.1 Forwarding}
     \begin{adjustbox}{totalheight=\textheight-3\baselineskip}
-	\input{gnuplot/2019-02-04T15:10:35Z-tcp.tex}
+	\input{gnuplot/7.1-forward-0,1.tex}
+    \end{adjustbox}
+\end{frame}
+
+\subsection{7.1 TCP Send Receive}
+\begin{frame}{7.1 TCP Send Receive}
+    \begin{adjustbox}{totalheight=\textheight-3\baselineskip}
+	\input{gnuplot/7.1-tcp.tex}
+    \end{adjustbox}
+\end{frame}
+
+\subsection{7.1 TCP IPv6 Send Receive}
+\begin{frame}{7.1 TCP IPv6 Send Receive}
+    \begin{adjustbox}{totalheight=\textheight-3\baselineskip}
+	\input{gnuplot/7.1-tcp6.tex}
+    \end{adjustbox}
+\end{frame}
+
+\subsection{6.9 IPsec}
+\begin{frame}{6.9 IPsec}
+    \begin{adjustbox}{totalheight=\textheight-3\baselineskip}
+	\input{gnuplot/6.9-ipsec.tex}
     \end{adjustbox}
 \end{frame}
 
@@ -431,21 +452,20 @@
     \end{adjustbox}
 \end{frame}
 
-
-\subsection{UDP Receive}
-\begin{frame}{UDP Receive}
+\subsection{Flamegraph UDP Receive}
+\begin{frame}{Flamegraph UDP Receive}
 %    \def\svgwidth{\textwidth}
 %	\input{udpbench-recv-1662249600.pdf_tex}
     \includegraphics[width=\textwidth]{udpbench-recv-1662249600.pdf}
 \end{frame}
 
-\subsection{Receive Parallel}
-\begin{frame}{UDP Receive Parallel}
+\subsection{Flamegraph UDP Receive Parallel}
+\begin{frame}{Flamegraph UDP Receive Parallel}
     \includegraphics[width=\textwidth]{udpbench-soreceive-parallel.pdf}
 \end{frame}
 
-\subsection{UDP Parallel}
-\begin{frame}{UDP Parallel}
+\subsection{Flamegraph UDP Parallel}
+\begin{frame}{Flamegraph UDP Parallel}
     \includegraphics[width=\textwidth]{udpbench-udp-parallel.pdf}
 \end{frame}
 

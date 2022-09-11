@@ -5,23 +5,36 @@ CLEAN_FILES =	${NAME:=.nav} ${NAME:=.snm} gnuplot/*
 # make does not support : in file name, it is a variable modifier
 # latex does not support . in file name, it is a suffix
 GNUPLOTS = \
-    2019-02-04T15:10:35Z tcp - - - - - \
-    2019-08-10T05:41:55Z tcp 3 1564614000 1564707600 3000000000 3500000000
+    2022-09-04T20:23:45Z udp 2 1662249599 1662249603 0 3500000000 \
+    7.1 forward 0,1 - - - - \
+    7.1 tcp - - - - - \
+    7.1 tcp6 - - - - - \
+    6.9 ipsec - - - - - \
 
-test.data:
+results/test.data:
+	mkdir -p results
 	ftp http://bluhm.genua.de/perform/results/test.data
+	mv test.data $@
+
+results/6.9/ipsec.data \
+results/7.1/tcp.data results/7.1/tcp6.data results/7.1/forward.data:
+	mkdir -p ${@:H}
+	ftp http://bluhm.genua.de/perform/${@:H}/gnuplot/${@:T}
+	mv ${@:T} $@
 
 .for d p n x X y Y in ${GNUPLOTS}
 
-TEXSRCS +=	gnuplot/${d:S/:/-/g}-$p${n:N-:S/^/-/}.tex
+TEXSRCS +=	gnuplot/${d:C/[:.]/-/g}-$p${n:N-:S/^/-/}.tex
 
 .PATH: bin
 
-gnuplot/${d:S/:/-/g}-$p${n:N-:S/^/-/}.tex: \
-    gnuplot.pl Buildquirks.pm Html.pm Testvars.pm plot.gp test.data
+gnuplot/${d:C/[:.]/-/g}-$p${n:N-:S/^/-/}.tex: \
+    gnuplot.pl Buildquirks.pm Html.pm Testvars.pm plot.gp results/test.data
 	mkdir -p gnuplot
 	rm -f $@
-	perl bin/gnuplot.pl -L -d $d -p $p ${n:N-:S/^/-N /} \
+	perl bin/gnuplot.pl -L \
+	    ${d:M*-*:S/^/-d /} ${d:M*.*:S/^/-r /} \
+	    -p $p ${n:N-:S/^/-N /} \
 	    ${x:N-:S/^/-x /} ${X:N-:S/^/-X /} \
 	    ${y:N-:S/^/-y /} ${Y:N-:S/^/-Y /}
 	cp gnuplot/$d-$p${n:N-:S/^/-/}.tex $@
