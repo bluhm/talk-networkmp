@@ -1,7 +1,7 @@
 USE_PDFLATEX =	yes
 NAME =		networkmp-slides
 TEXSRCS	=	networkmp-slides.tex
-CLEAN_FILES =	${NAME:=.nav} ${NAME:=.snm} gnuplot/*
+CLEAN_FILES =	${NAME:=.nav} ${NAME:=.snm} gnuplot/* svg/*.pdf
 # make does not support : in file name, it is a variable modifier
 # latex does not support . in file name, it is a suffix
 GNUPLOTS = \
@@ -12,7 +12,7 @@ GNUPLOTS = \
     6.9 ipsec - - - - - \
 
 results/test.data:
-	mkdir -p results
+	mkdir -p ${@:H}
 	ftp http://bluhm.genua.de/perform/results/test.data
 	mv test.data $@
 
@@ -29,7 +29,7 @@ TEXSRCS +=	gnuplot/${d:C/[:.]/-/g}-$p${n:N-:S/^/-/}.tex
 .PATH: bin
 
 gnuplot/${d:C/[:.]/-/g}-$p${n:N-:S/^/-/}.tex: \
-    gnuplot.pl Buildquirks.pm Html.pm Testvars.pm plot.gp results/test.data
+    gnuplot.pl Buildquirks.pm Html.pm Testvars.pm plot.gp
 	mkdir -p gnuplot
 	rm -f $@
 	perl bin/gnuplot.pl -L \
@@ -38,6 +38,27 @@ gnuplot/${d:C/[:.]/-/g}-$p${n:N-:S/^/-/}.tex: \
 	    ${x:N-:S/^/-x /} ${X:N-:S/^/-X /} \
 	    ${y:N-:S/^/-y /} ${Y:N-:S/^/-Y /}
 	cp gnuplot/$d-$p${n:N-:S/^/-/}.tex $@
+
+.endfor
+
+SVGS = \
+    udpbench-recv-1662249600 \
+    udpbench-soreceive-parallel \
+    udpbench-udp-parallel \
+    ot31-udp-recv-8 \
+    ot32-udp-send-8
+
+.for s in ${SVGS}
+
+OTHER +=	svg/$s.pdf
+
+svg/$s.svg:
+	mkdir -p ${@:H}
+	ftp http://bluhm.genua.de/files/$s.svg
+	mv $s.svg $@
+
+svg/$s.pdf: svg/$s.svg
+	cd ${@:H} && inkscape --export-type=pdf $s.svg
 
 .endfor
 
