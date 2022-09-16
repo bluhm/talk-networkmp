@@ -417,6 +417,31 @@
 
 \section{Performance Graphs}
 
+\subsection{Hardware Setup}
+\begin{frame}{Hardware Setup}
+\begin{tikzpicture}
+    \path (0,  0) node [draw,align=center] (lt13) {Linux\\lt13};
+    \path (12, 0) node [draw,align=center] (lt16) {Linux\\lt16};
+    \path (4,  2) node [draw,align=center] (ot14) {OpenBSD\\ot14};
+    \path (8,  2) node [draw,align=center] (ot15) {OpenBSD\\ot15};
+    \path (4, -2) node [draw,align=center] (ot31) {OpenBSD\\ot31};
+    \path (8, -2) node [draw,align=center] (ot32) {OpenBSD\\ot32};
+    \draw (lt13) -- (lt16);
+    \draw (ot14) -- (lt13);
+    \draw (ot14) -- (lt16);
+    \draw (ot14) -- (ot15);
+    \draw (ot15) -- (lt16);
+    \draw (ot31) -- (lt13);
+    \draw (ot31) -- (lt16);
+    \draw (ot31) -- (ot32);
+    \draw (ot32) -- (lt16);
+    \draw (ot14) -- (ot31); 
+    \path (ot15.east) node [blue,anchor=west] {4 core};
+    \path (ot32.east) node [blue,anchor=west] {2 socket, 8 core};
+\end{tikzpicture}
+\end{frame}
+
+
 \subsection{7.1 Forwarding}
 \begin{frame}{7.1 Forwarding}
     \begin{adjustbox}{totalheight=\textheight-3\baselineskip}
@@ -515,7 +540,8 @@
 \subsection{Questions}
 \begin{frame}{Questions}
 \begin{center}
-?
+    \includegraphics[width=\textwidth,clip]
+        {images/lt13-ot14-ot15-lt16.jpg}
 \end{center}
 \end{frame}
 
